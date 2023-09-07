@@ -15,46 +15,35 @@ namespace FunzioniCSV
             Random r = new Random();
             byte[] brAppoggio;
 
-            lock (file)
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            reader.Seek(0, SeekOrigin.Begin);
+
+            while(reader.Position < reader.Length)
             {
-                using (var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite))
-                using (var sr = new StreamReader(reader))
-                using (var bReader = new BinaryReader(reader))
+                reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
+                br = sr.ReadBytes(RecordLength);
+                line = Encoding.ASCII.GetString(br);
+                var index = line.LastIndexOf(";");
+                if (index < 0)
+                    break;
+                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
+                line = Encoding.ASCII.GetString(brAppoggio);
+                reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
+                if (contatore == 0)
                 {
-                    reader.Seek(0, SeekOrigin.Begin);
-
-                    while (reader.Position < reader.Length)
-                    {
-                        if (contatore == 0)
-                        {
-                            br = bReader.ReadBytes(RecordLength);
-                            line = Encoding.ASCII.GetString(br, 0, br.Length);
-                            var index = line.LastIndexOf(';');
-                            brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
-                            line = Encoding.ASCII.GetString(brAppoggio, 0, brAppoggio.Length);
-
-                            reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
-                            br = Encoding.ASCII.GetBytes((line + ";miovalore;cancellazione logica;").PadRight(RecordLength - 4) + "##");
-                            sr.BaseStream.Write(br, 0, br.Length);
-                        }
-                        else
-                        {
-                            reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
-
-                            line = sr.ReadLine();
-
-                            var index = line.LastIndexOf(';');
-                            brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
-                            line = Encoding.ASCII.GetString(brAppoggio, 0, brAppoggio.Length);
-
-                            reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
-                            br = Encoding.ASCII.GetBytes((line + ";" + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4) + "##");
-                            sr.BaseStream.Write(br, 0, br.Length);
-                        }
-                        contatore++;
-                    }
+                    br = Encoding.ASCII.GetBytes((line + ";miovalore;cancellazione logica;").PadRight(RecordLength - 4));
+                    sr.BaseStream.Write(br, 0, br.Length);
                 }
+                else
+                {
+                    br = Encoding.ASCII.GetBytes((line + ";" + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4));
+                    sr.BaseStream.Write(br, 0, br.Length);
+                }
+                contatore++;
             }
+            reader.Close();
+            
         }
     }
 }
