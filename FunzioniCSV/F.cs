@@ -83,5 +83,38 @@ namespace FunzioniCSV
 
             return campi;
         }
+
+        public static int LunghezzaMassima(string file, int RecordLength)
+        {
+            int max = 0;
+            //dichiarazione variabili
+            string line = "";
+            int campi = 0;
+            byte[] br, brAppoggio;
+
+            //apertura file
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            //posizionamento sulla prima riga del file
+            reader.Seek(0, SeekOrigin.Begin);
+            //ciclo per trovare la lunghezza massima
+            while(reader.Position < reader.Length)
+            {
+                //lettura di tutta la riga e conversione in stringa
+                br = sr.ReadBytes(RecordLength);
+                line = Encoding.ASCII.GetString(br);
+                //posizione ultimo carattere
+                var index = line.LastIndexOf(";");
+                if (index < 0)
+                    break;
+                else
+                {
+                    //se l'indice è maggiore del numero massimo attuale, allora il numero attuale cambia
+                    if(index>max)
+                        max = index;
+                }
+            }
+            return max;
+        }
     }
 }
