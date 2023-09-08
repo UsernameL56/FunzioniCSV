@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace FunzioniCSV
 {
@@ -81,15 +82,16 @@ namespace FunzioniCSV
             //conteggio degli split per capire il numero di campi presenti
             campi = line.Split(';').Length;
 
+            reader.Close();
             return campi;
         }
 
         public static int LunghezzaMassima(string file, int RecordLength)
         {
-            int max = 0;
+            
             //dichiarazione variabili
             string line = "";
-            int campi = 0;
+            int max = 0;
             byte[] br, brAppoggio;
 
             //apertura file
@@ -114,7 +116,82 @@ namespace FunzioniCSV
                         max = index;
                 }
             }
+            reader.Close();
             return max;
+        }
+
+        public static void RecordCoda(string file, int RecordLength, string line)
+        {
+            //dichiarazione variabili
+            byte[] br, brAppoggio;
+            Random r = new Random();
+
+            //apertura file
+            var writer = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read);
+            BinaryWriter sr = new BinaryWriter(writer);
+            //scrittura in append
+            br = Encoding.ASCII.GetBytes((line + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4) + "##");
+            sr.Write(br, 0, br.Length);
+
+            writer.Close();
+        }
+
+        public static string[,] TreCampi(string file, int RecordLength, int split1, int split2, int split3)
+        {
+            //dichiarazione variabili
+            string line = "";
+            int contatore = 0;
+            byte[] br, brAppoggio;
+            int n = NumRighe(file, RecordLength);
+            string[,] matrice = new string[n, 5];
+            //apertura file
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            //posizionamento sulla seconda riga
+            reader.Seek(RecordLength*1, SeekOrigin.Begin);
+            while(reader.Position < reader.Length)
+            {
+                br = sr.ReadBytes(RecordLength);
+                line = Encoding.ASCII.GetString(br);
+                var index = line.LastIndexOf(";");
+                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
+                line = Encoding.ASCII.GetString(brAppoggio);
+                String[] split = line.Split(';');
+                matrice[contatore, 0] = split[split1];
+                matrice[contatore, 1] = split[split2];
+                matrice[contatore, 2] = split[split3];
+            }
+
+            reader.Close();
+            return matrice;
+        }
+
+        public static int NumRighe(string file, int RecordLength)
+        {
+            int n = 0;
+
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            //posizionamento sulla seconda riga
+            reader.Seek(0, SeekOrigin.Begin);
+            while (reader.Position < reader.Length)
+            {
+                n++;
+            }
+
+            reader.Close();
+            return n;
+        }
+
+
+
+
+
+        public static void addUserControl(Panel panel1, UserControl userControl)
+        {
+            userControl.Dock = DockStyle.Fill;
+            panel1.Controls.Clear();
+            panel1.Controls.Add(userControl);
+            userControl.BringToFront();
         }
     }
 }
