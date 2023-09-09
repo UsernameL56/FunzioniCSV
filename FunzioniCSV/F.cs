@@ -142,8 +142,8 @@ namespace FunzioniCSV
             string line = "";
             int contatore = 0;
             byte[] br, brAppoggio;
-            int n = NumRighe(file, RecordLength);
-            string[,] matrice = new string[n, 5];
+            int x = NumRighe(file);
+            string[,] matrice = new string[x, 5];
             //apertura file
             var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
             BinaryReader sr = new BinaryReader(reader);
@@ -154,31 +154,34 @@ namespace FunzioniCSV
                 br = sr.ReadBytes(RecordLength);
                 line = Encoding.ASCII.GetString(br);
                 var index = line.LastIndexOf(";");
-                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
-                line = Encoding.ASCII.GetString(brAppoggio);
-                String[] split = line.Split(';');
-                matrice[contatore, 0] = split[split1];
-                matrice[contatore, 1] = split[split2];
-                matrice[contatore, 2] = split[split3];
+                if (index < 0)
+                    break;
+                else
+                {
+                    brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
+                    line = Encoding.ASCII.GetString(brAppoggio);
+                    String[] split = line.Split(';');
+                    matrice[contatore, 0] = split[split1];
+                    matrice[contatore, 1] = split[split2];
+                    matrice[contatore, 2] = split[split3];
+                }
+                contatore++;
             }
 
             reader.Close();
             return matrice;
         }
 
-        public static int NumRighe(string file, int RecordLength)
+        public static int NumRighe(string file)
         {
             int n = 0;
-
-            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
-            //posizionamento sulla seconda riga
-            reader.Seek(0, SeekOrigin.Begin);
-            while (reader.Position < reader.Length)
+            StreamReader sr = new StreamReader(file);
+            while (!sr.EndOfStream)
             {
+                sr.ReadLine();
                 n++;
             }
-
-            reader.Close();
+            sr.Close();
             return n;
         }
 
