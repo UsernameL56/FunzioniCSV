@@ -10,10 +10,27 @@ namespace FunzioniCSV
 {
     public static class F
     {
+        public static void Spaziatura(string file, string appoggio, int RecordLength)
+        {
+            string line, sep = ";";
+            int n = 0;
+            StreamReader reader = new StreamReader(appoggio);
+            StreamWriter writer = new StreamWriter(file);
+            while ((line = reader.ReadLine()) != null)
+            {
+                if(n == 0)
+                    writer.WriteLine((line + sep).PadRight(RecordLength - 4) + "##");
+                else
+                    writer.WriteLine((line + sep + n + sep).PadRight(RecordLength - 4) + "##");
+                n++;
+            }
+            reader.Close();
+            writer.Close();
+        }
         public static void AggiuntaRecords(string file, int RecordLength)
         {
             //dichiarazione variabili
-            string line = "";
+            string line = "", sep = ";";
             int contatore = 0;
             Random r = new Random();
             byte[] br, brAppoggio;
@@ -51,7 +68,7 @@ namespace FunzioniCSV
                 }
                 else
                 {
-                    br = Encoding.ASCII.GetBytes((line + ";" + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4));
+                    br = Encoding.ASCII.GetBytes((line + sep + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4));
                     sr.BaseStream.Write(br, 0, br.Length);
                 }
                 contatore++;
@@ -125,12 +142,13 @@ namespace FunzioniCSV
             //dichiarazione variabili
             byte[] br, brAppoggio;
             Random r = new Random();
+            int n = F.NumRighe(file);
 
             //apertura file
             var writer = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read);
             BinaryWriter sr = new BinaryWriter(writer);
             //scrittura in append
-            br = Encoding.ASCII.GetBytes((line + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4) + "##");
+            br = Encoding.ASCII.GetBytes((line + n + ";" + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4) + "##");
             sr.Write(br, 0, br.Length);
 
             writer.Close();
