@@ -12,10 +12,13 @@ namespace FunzioniCSV
     {
         public static void Spaziatura(string file, string appoggio, int RecordLength)
         {
+            //dichiarazioni variabili
             string line, sep = ";";
             int n = 0;
+            //apertura file
             StreamReader reader = new StreamReader(appoggio);
             StreamWriter writer = new StreamWriter(file);
+            //ciclo per leggere tutte le righe fino alla fine del file e aggiungere la spaziatura necesaria per rendere tutto uguale + campo univoco
             while ((line = reader.ReadLine()) != null)
             {
                 if(n == 0)
@@ -53,25 +56,29 @@ namespace FunzioniCSV
                 var index = line.LastIndexOf(";");
                 if (index < 0)
                     break;
-                //lettura di tutta la riga fino al ";" e conversione in stringa
-                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
-                line = Encoding.ASCII.GetString(brAppoggio);
-                //riposizionamento all'inizio della riga attuale
-                reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
-                
-                //controllo per capire se siamo sulla prima riga o no
-                //sovrascrittura della riga con la stringa originale + Tipo record / numero casuale e campo per cancellazione logica
-                if (contatore == 0)
-                {
-                    br = Encoding.ASCII.GetBytes((line + ";miovalore;cancellazione logica;").PadRight(RecordLength - 4));
-                    sr.BaseStream.Write(br, 0, br.Length);
-                }
                 else
                 {
-                    br = Encoding.ASCII.GetBytes((line + sep + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4));
-                    sr.BaseStream.Write(br, 0, br.Length);
+                    //lettura di tutta la riga fino al ";" e conversione in stringa
+                    brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
+                    line = Encoding.ASCII.GetString(brAppoggio);
+                    //riposizionamento all'inizio della riga attuale
+                    reader.Seek(RecordLength * contatore, SeekOrigin.Begin);
+
+                    //controllo per capire se siamo sulla prima riga o no
+                    //sovrascrittura della riga con la stringa originale + Tipo record / numero casuale e campo per cancellazione logica
+                    if (contatore == 0)
+                    {
+                        br = Encoding.ASCII.GetBytes((line + ";miovalore;cancellazione logica;").PadRight(RecordLength - 4));
+                        sr.BaseStream.Write(br, 0, br.Length);
+                    }
+                    else
+                    {
+                        br = Encoding.ASCII.GetBytes((line + sep + r.Next(10, 21) + ";true;").PadRight(RecordLength - 4));
+                        sr.BaseStream.Write(br, 0, br.Length);
+                    }
+                    contatore++;
                 }
-                contatore++;
+                
             }
             reader.Close();   
         }
@@ -160,6 +167,7 @@ namespace FunzioniCSV
             string line = "";
             int contatore = 0;
             byte[] br, brAppoggio;
+            //richiamo alla funzione per sapere il numero di righe del file
             int x = NumRighe(file);
             string[,] matrice = new string[x, 5];
             //apertura file
@@ -167,8 +175,10 @@ namespace FunzioniCSV
             BinaryReader sr = new BinaryReader(reader);
             //posizionamento sulla seconda riga
             reader.Seek(RecordLength*1, SeekOrigin.Begin);
+            //ciclo per aggiungere i 3 campi scelti dall'utente nella matrice
             while(reader.Position < reader.Length)
             {
+                //lettura di tutta la riga + conversione in stringa
                 br = sr.ReadBytes(RecordLength);
                 line = Encoding.ASCII.GetString(br);
                 var index = line.LastIndexOf(";");
@@ -176,8 +186,10 @@ namespace FunzioniCSV
                     break;
                 else
                 {
+                    //lettura della riga fino all'ultimo carattere e conversione in stringa
                     brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
                     line = Encoding.ASCII.GetString(brAppoggio);
+                    //split con parametri scelti dall'utente
                     String[] split = line.Split(';');
                     matrice[contatore, 0] = split[split1];
                     matrice[contatore, 1] = split[split2];
@@ -190,10 +202,36 @@ namespace FunzioniCSV
             return matrice;
         }
 
+        public static string Ricerca(string file, int RecordLength, int input)
+        {
+            //dichiarazione variabili
+            string line = "";
+            byte[] br, brAppoggio;
+
+            //apertura file
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            //posizionamento sulla riga dove si trova il campo univoco
+            reader.Seek(RecordLength * input, SeekOrigin.Begin);
+            //lettura di tutta la riga e conversione in stringa
+            br = sr.ReadBytes(RecordLength);
+            line = Encoding.ASCII.GetString(br);
+            //posizione ultimo carattere
+            var index = line.LastIndexOf(";");
+            //lettura riga fino all'ultimo carattere e conversione in stringa
+            brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, index));
+            line = Encoding.ASCII.GetString(brAppoggio);
+            reader.Close();
+            return line;
+        }
+
         public static int NumRighe(string file)
         {
+            //dichiarazione contatore
             int n = 0;
+            //apertura file lettura
             StreamReader sr = new StreamReader(file);
+            //ciclo per leggere le righe fino alla fine del file con incremento del contatore per tenerne il conto
             while (!sr.EndOfStream)
             {
                 sr.ReadLine();
@@ -209,9 +247,13 @@ namespace FunzioniCSV
 
         public static void addUserControl(Panel panel1, UserControl userControl)
         {
+            //impostazione del UserControl al centro e con riempimento di tutto il panel
             userControl.Dock = DockStyle.Fill;
+            //rimozione dell'UserControl attuale dal panel
             panel1.Controls.Clear();
+            //aggiunta del nuovo UserControl al panel
             panel1.Controls.Add(userControl);
+            //imposta l'UserControl al primo piano
             userControl.BringToFront();
         }
     }
