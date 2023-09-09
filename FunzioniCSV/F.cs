@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.LinkLabel;
 
 namespace FunzioniCSV
 {
@@ -22,7 +24,7 @@ namespace FunzioniCSV
             while ((line = reader.ReadLine()) != null)
             {
                 if(n == 0)
-                    writer.WriteLine((line + sep).PadRight(RecordLength - 4) + "##");
+                    writer.WriteLine((line + sep + "CampoUnivoco" + sep).PadRight(RecordLength - 4) + "##");
                 else
                     writer.WriteLine((line + sep + n + sep).PadRight(RecordLength - 4) + "##");
                 n++;
@@ -202,7 +204,7 @@ namespace FunzioniCSV
             return matrice;
         }
 
-        public static string Ricerca(string file, int RecordLength, int input)
+        public static string Ricerca(string file, int RecordLength, int riga)
         {
             //dichiarazione variabili
             string line = "";
@@ -212,7 +214,7 @@ namespace FunzioniCSV
             var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
             BinaryReader sr = new BinaryReader(reader);
             //posizionamento sulla riga dove si trova il campo univoco
-            reader.Seek(RecordLength * input, SeekOrigin.Begin);
+            reader.Seek(RecordLength * riga, SeekOrigin.Begin);
             //lettura di tutta la riga e conversione in stringa
             br = sr.ReadBytes(RecordLength);
             line = Encoding.ASCII.GetString(br);
@@ -242,27 +244,71 @@ namespace FunzioniCSV
             line = Encoding.ASCII.GetString(br);
             //posizione ultimo carattere ;
             int index = line.LastIndexOf(";");
+            //richiamo alla funzione per la posizione dei caratteri ;
             contenitore = PosizioneCampo(line, campo);
             if(campo > 0)
             {
+                //lettura della prima parte di bytes fino al campo desiderato e conversione in stringa
                 brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, contenitore[campo-1]));
                 line1 = Encoding.ASCII.GetString(brAppoggio);
+                //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
                 brAppoggio = Encoding.ASCII.GetBytes(line.Substring(contenitore[campo], index));
                 line2 = Encoding.ASCII.GetString(brAppoggio);
+                //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
                 reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+                //lettura delle 2 stringe estratte e dell'input e sovrascrittura della riga precedente
                 br = Encoding.ASCII.GetBytes((line1 + sep + input + line2).PadRight(RecordLength - 4));
                 sw.Write(br, 0, br.Length);
             }
             else
             {
+                //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
                 brAppoggio = Encoding.ASCII.GetBytes(line.Substring(contenitore[campo], index));
                 line2 = Encoding.ASCII.GetString(brAppoggio);
+                //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
                 reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+                //lettura delle 2 stringe estratte e dell'input e sovrascrittura della riga precedente
                 br = Encoding.ASCII.GetBytes((input + line2).PadRight(RecordLength - 4));
                 sw.Write(br, 0, br.Length);
             }
             reader.Close();
         }
+
+        public static void Cancellazione(string file, int RecordLength, int riga)
+        {
+            //dichiarazione variabili
+            string line = "", line1 = "", line2 = "", sep = ";";
+            byte[] br, brAppoggio;
+            int[] contenitore = new int[15];
+
+
+            //apertura file
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            BinaryWriter sw = new BinaryWriter(reader);
+            //posizionamento sulla riga dove si trova il campo univoco
+            reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+            //lettura di tutta la riga e conversione in stringa
+            br = sr.ReadBytes(RecordLength);
+            line = Encoding.ASCII.GetString(br);
+            //posizione ultimo carattere
+            var index = line.LastIndexOf(";");
+            //richiamo alla funzione per la posizione dei caratteri ;
+            contenitore = PosizioneCampo(line, 8);
+            //lettura della prima parte di bytes fino al campo desiderato e conversione in stringa
+            brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, contenitore[8 - 1]));
+            line1 = Encoding.ASCII.GetString(brAppoggio);
+            //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
+            brAppoggio = Encoding.ASCII.GetBytes(line.Substring(contenitore[8], index));
+            line2 = Encoding.ASCII.GetString(brAppoggio);
+            //lettura della parte successiva di bytes rispetto al campo desiderato e conversione in stringa
+            reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+            //lettura delle 2 stringe estratte e dell'input e sovrascrittura della riga precedente
+            br = Encoding.ASCII.GetBytes((line1 + sep + "false" + line2).PadRight(RecordLength - 4));
+            sw.Write(br, 0, br.Length);
+            reader.Close();
+        }
+
 
         public static int[] PosizioneCampo(string str, int campo)
         {
