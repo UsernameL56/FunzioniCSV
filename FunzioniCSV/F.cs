@@ -225,6 +225,63 @@ namespace FunzioniCSV
             return line;
         }
 
+        public static void Modifica(string file, int RecordLength, int riga, int campo, string input)
+        {
+            //dichiarazione variabili
+            string line = "", line1 = "", line2 = "", sep = ";";
+            byte[] br, brAppoggio;
+            int[] contenitore = new int[15];
+            //apertura file
+            var reader = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader sr = new BinaryReader(reader);
+            BinaryWriter sw = new BinaryWriter(reader);
+            //posizionamento sulla riga dove si trova il campo univoco
+            reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+            //lettura di tutta la riga + conversione in stringa
+            br = sr.ReadBytes(RecordLength);
+            line = Encoding.ASCII.GetString(br);
+            //posizione ultimo carattere ;
+            int index = line.LastIndexOf(";");
+            contenitore = PosizioneCampo(line, campo);
+            if(campo > 0)
+            {
+                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(0, contenitore[campo-1]));
+                line1 = Encoding.ASCII.GetString(brAppoggio);
+                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(contenitore[campo], index));
+                line2 = Encoding.ASCII.GetString(brAppoggio);
+                reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+                br = Encoding.ASCII.GetBytes((line1 + sep + input + line2).PadRight(RecordLength - 4));
+                sw.Write(br, 0, br.Length);
+            }
+            else
+            {
+                brAppoggio = Encoding.ASCII.GetBytes(line.Substring(contenitore[campo], index));
+                line2 = Encoding.ASCII.GetString(brAppoggio);
+                reader.Seek(RecordLength * riga, SeekOrigin.Begin);
+                br = Encoding.ASCII.GetBytes((input + line2).PadRight(RecordLength - 4));
+                sw.Write(br, 0, br.Length);
+            }
+            reader.Close();
+        }
+
+        public static int[] PosizioneCampo(string str, int campo)
+        {
+            //dichiarazione variabili
+            int Index, IndexAppoggio;
+            int[] contenitore = new int[15];
+            //posizione primo carattere ;
+            IndexAppoggio = str.IndexOf(';');
+            //ciclo per inserire all'interno di un array la posizione di tutti i caratteri ; fino al campo desiderato
+            for (int i = 0; i <= campo; i++)
+            {
+                contenitore[i] = IndexAppoggio;
+                IndexAppoggio = str.IndexOf(';', IndexAppoggio + 1);
+
+            }
+            return contenitore;
+        }
+
+
         public static int NumRighe(string file)
         {
             //dichiarazione contatore
